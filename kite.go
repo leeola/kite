@@ -18,6 +18,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/koding/kite/config"
 	"github.com/koding/kite/protocol"
+	"github.com/koding/kite/utils"
 	"github.com/nu7hatch/gouuid"
 	"gopkg.in/igm/sockjs-go.v2/sockjs"
 )
@@ -83,6 +84,10 @@ type Kite struct {
 	// Handlers to call when a client has disconnected.
 	onDisconnectHandlers []func(*Client)
 
+	// onHttpRegisterListeners handles the pubsub and notification for
+	// our
+	onHttpRegisterListeners *utils.SimpleNotify
+
 	// server fields, are initialized and used when
 	// TODO: move them to their own struct, just like KontrolClient
 	listener  net.Listener
@@ -136,6 +141,7 @@ func New(name, version string) *Kite {
 		readyC:             make(chan bool),
 		closeC:             make(chan bool),
 		muxer:              mux.NewRouter(),
+		onHttpRegisterListeners: utils.NewSimpleNotify(),
 	}
 
 	// We change the heartbeat interval from 25 seconds to 10 seconds. This is

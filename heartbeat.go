@@ -152,6 +152,9 @@ func (k *Kite) RegisterHTTP(kiteURL *url.URL) (*registerResult, error) {
 	k.Log.Info("Registered (via HTTP) with URL: '%s' and HeartBeat interval: '%s'",
 		rr.URL, heartbeat)
 
+	// Notify anyone that cares that we registered via Http
+	go k.onHttpRegisterListeners.Notify()
+
 	go k.sendHeartbeats(heartbeat, kiteURL)
 
 	return &registerResult{parsed}, nil
@@ -219,4 +222,17 @@ func (k *Kite) sendHeartbeats(interval time.Duration, kiteURL *url.URL) {
 			k.Log.Error("couldn't sent hearbeat: %s", err)
 		}
 	}
+}
+
+// OnHttpRegister registers a channel to be notified once the kite has
+// http registered to Kontrol. This will be called every time until the
+// channel is unregistered.
+func (k *Kite) OnHTTPRegister(ch chan<- struct{}) {
+	k.onHttpRegisterListeners.Register(ch)
+}
+
+// OffHttpRegister unregisters a channel from being notified when this
+// kite registers to Kontrol. The unregister method for OnHttpRegister.
+func (k *Kite) OffHTTPRegister(ch chan<- struct{}) {
+	k.onHttpRegisterListeners.Unregister(ch)
 }
